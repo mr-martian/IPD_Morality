@@ -376,7 +376,7 @@ class CHAMPION(BotPlayer):
         BotPlayer.__init__(self, "CHAMPION", description=d)
 
     def getNextMove(self, pastMoves,\
-                    payoffs={'T': 5,'R': 3,'P': 1,'S': 0}, w=0.9):
+                    payoffs={'T': 5,'R': 3,'P': 1,'S': 0}, w=0.995):
         """
         Cooperate for 1/20 the expected length of interaction, mirror partner's
         moves for 3/40 the expected length of interaction, then defect with
@@ -405,6 +405,45 @@ class CHAMPION(BotPlayer):
             else:
                 # at least one condition failed
                 return 'C'
+
+class STATBOT(BotPlayer):
+    def __init__(self, nice=True):
+        d = "STATBOT cooperates, then defects, then after that calculates its average score per move"+\
+        " for cooperation and defect and chooses whichever one is higher, in the case of a tie, "+\
+        "NICE_STATBOT cooperates and MEAN_STATBOT defects"
+        self.nice = nice
+        if nice:
+            n = 'NICE_STATBOT'
+        else:
+            n = 'MEAN_STATBOT'
+        BotPlayer.__init__(self, n, d)
+    def getNextMove(self, pastMoves, payoffs={'T': 5,'R': 3,'P': 1,'S': 0}, w=0.995):
+        if len(pastMoves) == 0:
+            return 'C'
+        elif len(pastMoves) == 1:
+            return 'D'
+        else:
+            c, d = [], []
+            for m in pastMoves:
+                if m[0] == 'C':
+                    if m[1] == 'C':
+                        c.append(payoffs['R'])
+                    else:
+                        c.append(payoffs['S'])
+                else:
+                    if m[1] == 'C':
+                        d.append(payoffs['T'])
+                    else:
+                        d.append(payoffs['P'])
+            if sum(c)/len(c) > sum(d)/len(d):
+                return 'C'
+            elif sum(c)/len(c) == sum(d)/len(d):
+                if self.nice:
+                    return 'C'
+                else:
+                    return 'D'
+            else:
+                return 'D'
 
 
 ## TODO: design and implement more bots
